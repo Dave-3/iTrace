@@ -124,6 +124,29 @@ def ago_iso(minutes: int) -> str {
 
 # ---------- Graph access ----------
 
+"""Public commons data is opened to every user (anonymous shoppers and signed-in brand managers)."""
+def share(n: any) {
+    grant(n, level=WritePerm);  # jac:ignore[E1053]
+}
+
+"""Open every node reachable from the hub - run once after seeding."""
+def share_tree(hub: Hub) {
+    seen: set[str] = set();
+    stack: list[any] = [hub];
+    while len(stack) > 0 {
+        n = stack.pop();
+        k = jid(n);
+        if k in seen {
+            continue;
+        }
+        seen.add(k);
+        share(n);
+        for m in [n -->] {
+            stack.append(m);
+        }
+    }
+}
+
 """The shared commons hub. Anonymous requests run on root.shared, so all public data lives here."""
 def get_hub() -> Hub {
     hubs = [root.shared -->][?:Hub];
@@ -132,6 +155,7 @@ def get_hub() -> Hub {
     }
     hub = (root.shared ++> Hub())[0];
     seed_graph(hub);
+    share_tree(hub);
     return hub;
 }
 
@@ -160,13 +184,16 @@ def trace_for(hub: Hub, code: str) -> Trace {
             return t;
         }
     }
-    return (hub ++> Trace(code=code))[0];
+    tr = (hub ++> Trace(code=code))[0];
+    share(tr);
+    return tr;
 }
 
 def record_scan(hub: Hub, code: str, region_name: str, verdict: str, minutes_ago: int = 0) -> Scan {
     tr = trace_for(hub, code);
     sc = (tr ++> Scan(at=ago_iso(minutes_ago), region=find_region(hub, region_name).name, verdict=verdict))[0];
     sc +>:ScannedIn:+> find_region(hub, region_name);
+    share(sc);
     return sc;
 }
 

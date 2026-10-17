@@ -8,9 +8,12 @@ Every agent has a deterministic fallback, so iTrace works with no API key.
 
 import from byllm.lib { Model }
 import from datetime { datetime }
+import hashlib;
+import hmac;
+import secrets;
 import from services.graph {
     Hub, Brand, Product, Batch, Unit, Region, Trace, Scan, Report, Action, ScannedIn,
-    get_hub, find_brand, trace_for, record_scan, km_between, now_iso, REGIONS
+    get_hub, find_brand, trace_for, record_scan, km_between, now_iso, REGIONS, share
 }
 
 glob agent_llm: Model = Model(model_name="gemini/gemini-2.5-flash");
@@ -500,7 +503,8 @@ def:pub report_product(code: str, region: str, note: str) -> str {
         return "Please describe what you noticed (at least 5 characters).";
     }
     hub = get_hub();
-    trace_for(hub, clean) ++> Report(note=note.strip()[:1000], region=region, at=now_iso());
+    rep = (trace_for(hub, clean) ++> Report(note=note.strip()[:1000], region=region, at=now_iso()))[0];
+    share(rep);
     return "Report saved. It now warns every shopper who checks this code, and alerts the brand.";
 }
 
@@ -601,14 +605,16 @@ def _region_stats(hub: Hub, brand: Brand) -> RegionScan {
     return RegionScan(regions=list(stats.values()), avg_price=sw.avg_price, n_codes=len(own));
 }
 
-def:pub market_intel(brand_name: str, api_key: str, model: str, refresh: bool) -> IntelResult {
+def:pub market_intel(token: str, api_key: str, model: str, refresh: bool) -> IntelResult {
     global _steps;
     _steps = [];
     hub = get_hub();
-    brand = find_brand(hub, brand_name);
+    acct = _account_by_token(token);
+    brand_name = acct.brand if acct is not None else "";
+    brand = find_brand(hub, brand_name) if acct is not None else None;
     if brand is None {
         return IntelResult(brand=brand_name, total_scans=0, genuine=0, flagged=0, share_lost_pct=0,
-            est_loss_kes=0, regions=[], summary="Brand not found.", actions=[], steps=[]);
+            est_loss_kes=0, regions=[], summary="Sign in to see your brand's dashboard.", actions=[], steps=[]);
     }
     _log("MarketIntelAgent", "plan", f"Map counterfeit pressure on {brand.name} across Kenya and propose actions.");
     rs = _region_stats(hub, brand);
@@ -617,10 +623,10 @@ def:pub market_intel(brand_name: str, api_key: str, model: str, refresh: bool) -
     genuine = sum([r.genuine for r in regions]);
     flagged = sum([r.suspicious + r.fake for r in regions]);
     loss = sum([r.est_loss_kes for r in regions]);
-    share = int(round(100 * flagged / (genuine + flagged))) if genuine + flagged > 0 else 0;
+    share_pct = int(round(100 * flagged / (genuine + flagged))) if genuine + flagged > 0 else 0;
     hot = sorted(regions, key=lambda r: RegionStat : r.share_lost_pct, reverse=True);
     _log("MarketIntelAgent", "scan crowd network", f"{genuine} genuine vs {flagged} flagged scans; hotspots: {', '.join([h.region for h in hot[:3]])}");
-    summary = f"{share}% of {brand.name} scans nationally fail verification. Hotspots: " + ", ".join([f"{h.region} ({h.share_lost_pct}%)" for h in hot[:3]]) + f". Estimated KES {loss:,} a month leaks to counterfeits.";
+    summary = f"{share_pct}% of {brand.name} scans nationally fail verification. Hotspots: " + ", ".join([f"{h.region} ({h.share_lost_pct}%)" for h in hot[:3]]) + f". Estimated KES {loss:,} a month leaks to counterfeits.";
 
     existing = [a for a in [brand -->][?:Action]];
     ai_used = False;
@@ -648,20 +654,26 @@ def:pub market_intel(brand_name: str, api_key: str, model: str, refresh: bool) -
             }
         }
         for p in props {
-            brand ++> Action(kind=p.kind, title=p.title, detail=p.detail, region=p.region,
-                impact_kes=p.impact_kes, created_at=now_iso(), by_ai=ai_used);
+            act = (brand ++> Action(kind=p.kind, title=p.title, detail=p.detail, region=p.region,
+                impact_kes=p.impact_kes, created_at=now_iso(), by_ai=ai_used))[0];
+            share(act);
         }
         _log("MarketIntelAgent", "propose actions", f"{len(props)} actions awaiting human approval");
     }
     actions = [_view(a) for a in [brand -->][?:Action]];
     return IntelResult(brand=brand.name, total_scans=genuine + flagged, genuine=genuine, flagged=flagged,
-        share_lost_pct=share, est_loss_kes=loss, regions=regions, summary=summary, actions=actions,
+        share_lost_pct=share_pct, est_loss_kes=loss, regions=regions, summary=summary, actions=actions,
         steps=list(_steps), ai_used=ai_used, ai_note=ai_note);
 }
 
-def:pub decide_action(action_id: str, decision: str) -> ActionView | None {
+def:pub decide_action(token: str, action_id: str, decision: str) -> ActionView | None {
+    acct = _account_by_token(token);
+    if acct is None {
+        return None;
+    }
     target = jobj(action_id);
-    if isinstance(target, Action) and decision in ["approved", "rejected"] {
+    owners = [b.name for b in [target <--][?:Brand]] if isinstance(target, Action) else [];
+    if isinstance(target, Action) and acct.brand in owners and decision in ["approved", "rejected"] {
         target.status = decision;
         return _view(target);
     }
@@ -686,12 +698,15 @@ walker:pub register_batch {
         b = find_brand(hub, self.brand);
         if b is None {
             b = (hub ++> Brand(name=self.brand, sector=self.category))[0];
+            share(b);
         }
         prods = [p for p in [b -->][?:Product] if p.name == self.product];
         prod = prods[0] if len(prods) > 0 else (b ++> Product(sku=self.product.upper().replace(" ", "-")[:24], name=self.product, category=self.category))[0];
+        share(prod);
         batch = (prod ++> Batch(batch_no=self.batch_no, expires_on=self.expires_on, size=len(self.codes)))[0];
+        share(batch);
         for c in self.codes {
-            batch ++> Unit(code=c.strip().upper());
+            share((batch ++> Unit(code=c.strip().upper()))[0]);
         }
         report {"ok": True, "brand": b.name, "product": prod.name, "batch": batch.batch_no, "units": len(self.codes)};
     }
@@ -708,4 +723,100 @@ walker:pub ingest_scan {
         record_scan(get_hub(), self.code.strip().upper(), self.region, verdict);
         report {"ok": True, "code": self.code, "registered": reg.found, "verdict": verdict};
     }
+}
+
+# =====================================================================
+# Brand workspaces - accounts live on the graph (salted PBKDF2, session tokens)
+# =====================================================================
+
+node Account {
+    has email: str,
+        brand: str,
+        salt: str,
+        pw_hash: str,
+        token: str = "",
+        created_at: str = "";
+}
+
+obj Session {
+    has ok: bool = False,
+        token: str = "",
+        email: str = "",
+        brand: str = "",
+        error: str = "";
+}
+
+def _hash(password: str, salt: str) -> str {
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 120000).hex();
+}
+
+def _account_by_email(hub: Hub, email: str) -> Account | None {
+    for a in [hub -->][?:Account] {
+        if a.email == email {
+            return a;
+        }
+    }
+    return None;
+}
+
+def _account_by_token(token: str) -> Account | None {
+    if len(token) < 20 {
+        return None;
+    }
+    for a in [get_hub() -->][?:Account] {
+        if a.token != "" and hmac.compare_digest(a.token, token) {
+            return a;
+        }
+    }
+    return None;
+}
+
+def:pub sign_up(email: str, password: str, brand_name: str) -> Session {
+    hub = get_hub();
+    clean = email.strip().lower();
+    if "@" not in clean or len(clean) > 120 {
+        return Session(error="Enter a valid work email.");
+    }
+    if len(password) < 8 {
+        return Session(error="Use a password of at least 8 characters.");
+    }
+    if len(brand_name.strip()) < 2 {
+        return Session(error="Choose the brand you manage.");
+    }
+    if _account_by_email(hub, clean) is not None {
+        return Session(error="An account with this email already exists - sign in instead.");
+    }
+    brand = brand_name.strip()[:60];
+    if find_brand(hub, brand) is None {
+        share((hub ++> Brand(name=brand, sector="New on iTrace"))[0]);
+    }
+    salt = secrets.token_hex(16);
+    tok = secrets.token_urlsafe(32);
+    hub ++> Account(email=clean, brand=brand, salt=salt, pw_hash=_hash(password, salt), token=tok, created_at=now_iso());
+    return Session(ok=True, token=tok, email=clean, brand=brand);
+}
+
+def:pub sign_in(email: str, password: str) -> Session {
+    a = _account_by_email(get_hub(), email.strip().lower());
+    if a is None or not hmac.compare_digest(a.pw_hash, _hash(password, a.salt)) {
+        return Session(error="Email or password is incorrect.");
+    }
+    a.token = secrets.token_urlsafe(32);
+    return Session(ok=True, token=a.token, email=a.email, brand=a.brand);
+}
+
+def:pub whoami(token: str) -> Session {
+    a = _account_by_token(token);
+    if a is None {
+        return Session(error="Session expired - please sign in.");
+    }
+    return Session(ok=True, token=token, email=a.email, brand=a.brand);
+}
+
+def:pub sign_out(token: str) -> bool {
+    a = _account_by_token(token);
+    if a is not None {
+        a.token = "";
+    }
+    return True;
 }

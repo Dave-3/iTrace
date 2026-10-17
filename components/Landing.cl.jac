@@ -18,7 +18,6 @@ glob CHANNELS: list[str] = ["KEBS · 20023", "KEPHIS · 1393", "PPB register", "
 def:pub GoDisc(href: str, label: str) -> JsxElement {
     return <a href={"#" + href} aria-label={label}
         className="group relative inline-flex size-16 shrink-0 items-center justify-center rounded-full bg-amber text-ink transition-transform duration-300 hover:scale-105 sm:size-24">
-        <span className="absolute right-full top-1/2 mr-2 hidden h-0.5 w-16 bg-white sm:block"></span>
         <span className="text-2xl font-bold sm:text-4xl">→</span>
     </a>;
 }
