@@ -1,2 +1,12 @@
 .jac/
 node_modules/
+
+# local-only: hackathon materials, process docs, design prototype, decks, test guides
+*.pdf
+agent-development-guidelines*.md
+Particle Stream Hero*.html
+pitch-deck*
+TEST-GUIDE.md
+PROJECT-DESCRIPTION.md
+docs/
+.jac/
