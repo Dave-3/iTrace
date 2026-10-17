@@ -6,7 +6,7 @@ MarketIntel   - brand: regional counterfeit pressure -> proposed actions (human 
 Every agent has a deterministic fallback, so iTrace works with no API key.
 """
 
-import from byllm.lib { Model }
+import from jaclang.byllm.lib { Model }
 import from datetime { datetime }
 import hashlib;
 import hmac;
@@ -226,15 +226,15 @@ walker CrowdWalker {
 walker SupplyWalker {
     has codes: list[str] = [],
         avg_price: int = 0,
-        _prices: list[int] = [];
+        prices: list[int] = [];
 
     can on_brand with Brand entry {
         visit [-->[?:Product]];
     }
 
     can on_product with Product entry {
-        self._prices.append(here.price_kes);
-        self.avg_price = int(sum(self._prices) / len(self._prices));
+        self.prices.append(here.price_kes);
+        self.avg_price = int(sum(self.prices) / len(self.prices));
         visit [-->[?:Batch]];
     }
 
@@ -562,7 +562,7 @@ obj RegionScan {
 }
 
 def _region_stats(hub: Hub, brand: Brand) -> RegionScan {
-    sw = SupplyWalker(codes=[], _prices=[]);
+    sw = SupplyWalker(codes=[], prices=[]);
     brand spawn sw;
     own_codes = set(sw.codes);
     stats: dict[str, RegionStat] = {};
