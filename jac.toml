@@ -1,14 +1,13 @@
 [project]
-name = "empty"
+name = "itrace"
 version = "0.0.1"
-description = "Empty Jac project - start from scratch"
+description = "iTrace - agentic product trust network for Kenya"
 entry-point = "main.jac"
 kind = "web-app"
 
-[byllm]
-[byllm.model]
-default_model = "${LLM_MODEL:-gpt-4o-mini}"
-api_key = "${OPENAI_API_KEY:-}"
+[plugins.byllm]
+[plugins.byllm.model]
+default_model = "${LLM_MODEL:-gemini/gemini-2.5-flash}"
 
 
 [jac-shadcn]
@@ -67,21 +66,21 @@ watchdog = ">=3.0.0"
 [serve]
 base_route_app = "app"
 
-[client]
-[client.vite]
+[plugins.client]
+[plugins.client.vite]
 plugins = ["tailwindcss()"]
 lib_imports = ["import tailwindcss from '@tailwindcss/vite'"]
 
-[client.app_meta_data]
-title = "A blank canvas"
-description = "A minimal jac-shadcn starter with the theme wired up and nothing in the way."
-keywords = "jac, starter, shadcn, template"
-author = "Blank canvas"
-theme_color = "#dc7702"
+[plugins.client.app_meta_data]
+title = "iTrace - Is it real?"
+description = "Verify products, route official checks, and see where counterfeits hit your market."
+keywords = "counterfeit, kenya, product verification, supply chain, jac"
+author = "iTrace"
+theme_color = "#171f27"
 og_type = "website"
-og_title = "A blank canvas"
-og_description = "A minimal jac-shadcn starter."
-og_site_name = "Blank canvas"
+og_title = "iTrace - Is it real?"
+og_description = "Agentic product trust for Kenya."
+og_site_name = "iTrace"
 
 
 [scale]

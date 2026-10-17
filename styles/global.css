@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -75,6 +76,21 @@
     --radius: 0.625rem;
 }
 
+/* iTrace design tokens (from the particle-stream prototype) */
+@theme {
+    --color-ink: #171f27;
+    --color-ink-deep: #121920;
+    --color-surface: #1c2731;
+    --color-surface-2: #223040;
+    --color-amber: #ffc03d;
+    --color-amber-soft: #ffd064;
+    --color-teal: rgb(36 182 182);
+    --color-sage: rgb(118 168 140);
+    --color-gold: rgb(222 170 62);
+    --color-danger: #ef6b5b;
+    --font-display: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+}
+
 @theme inline {
     --font-sans: 'Geist Variable', sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
@@ -128,3 +144,14 @@
         @apply font-sans;
     }
 }
+
+html, body { background: #171f27; color: #fff; }
+.bracket::before, .bracket::after {
+    content: ""; display: inline-block; width: 0.55em; height: 0.55em;
+    border: 2px solid currentColor; vertical-align: middle;
+}
+.bracket::before { border-right: 0; border-bottom: 0; margin-right: 0.7em; }
+.bracket::after { border-left: 0; border-top: 0; margin-left: 0.7em; }
+@keyframes itrace-pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+.agent-pulse { animation: itrace-pulse 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .agent-pulse { animation: none; } }
