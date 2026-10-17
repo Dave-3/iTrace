@@ -26,7 +26,7 @@ def:pub NavBar(path: str) -> JsxElement {
         return base + ("bg-white/10 text-white" if path == target else "text-slate-300 hover:text-white");
     }
 
-    return <header className="sticky top-0 z-40 border-b border-white/5 bg-ink/85 backdrop-blur">
+    return <header className="sticky top-0 z-40 border-b border-white/5 bg-ink/95">
         <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-8" aria-label="Main">
             <a href="#/" className="bracket font-display text-sm font-bold uppercase tracking-[0.18em] text-white">iTrace</a>
             <div className="flex items-center gap-1 sm:gap-2">
