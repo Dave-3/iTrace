@@ -217,7 +217,7 @@ def:pub BusinessPage() -> JsxElement {
         return <main className="flex min-h-[60vh] items-center justify-center"><p className="agent-pulse text-amber">Loading your workspace…</p></main>;
     }
     if session is None {
-        return <BusinessAuth onAuthed={lambda s: Session { on_authed(s); }} />;
+        return <BusinessAuth onAuthed={lambda (s: Session) { on_authed(s); }} />;
     }
 
     pending = len([a for a in intel.actions if a.status == "pending"]) if intel is not None else 0;
@@ -231,7 +231,7 @@ def:pub BusinessPage() -> JsxElement {
                 </div>
                 <nav className="flex flex-col gap-1" aria-label="Dashboard">
                     {for n in NAV {
-                        <a key={n[0]} href={"#/business"} onClick={lambda e: MouseEvent { e.preventDefault(); scroll_to(n[0]); }}
+                        <a key={n[0]} href={"#/business"} onClick={lambda (e: MouseEvent) { e.preventDefault(); scroll_to(n[0]); }}
                             className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">
                             <span>{n[1]}</span>
                             {if n[0] == "actions" and pending > 0 { <span className="rounded-full bg-amber px-2 text-[11px] font-bold text-ink">{str(pending)}</span> }}
@@ -278,7 +278,7 @@ def:pub BusinessPage() -> JsxElement {
                             <p className="mt-1 text-sm text-slate-400">Nothing runs until you approve. Every decision is logged on your brand's graph.</p>
                             <div className="mt-4 flex flex-col gap-3">
                                 {for a in intel.actions {
-                                    <ActionCard key={a.id} a={a} onDecide={lambda aid: str, d: str { decide(aid, d); }} />
+                                    <ActionCard key={a.id} a={a} onDecide={lambda (aid: str, d: str) { decide(aid, d); }} />
                                 }}
                             </div>
                         </section>

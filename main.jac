@@ -6,11 +6,9 @@ import from services.agents {
     sign_up, sign_in, whoami, sign_out
 }
 
-cl {
-    import ".styles.global.css";
-    import from .components.AppShell { AppShell }
+import ".styles.global.css";
+import from .components.AppShell { AppShell }
 
-    def:pub app() -> JsxElement {
-        return <AppShell />;
-    }
+def:pub app() -> JsxElement {
+    return <AppShell />;
 }

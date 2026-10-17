@@ -164,7 +164,7 @@ def _tick(ctx: any, time: float) {
         }
     }
     _draw(ctx, time);
-    requestAnimationFrame(lambda(t: float) { _tick(ctx, t); });
+    requestAnimationFrame(lambda (t: float) { _tick(ctx, t); });
 }
 
 def:pub ParticleField(className: str = "") -> JsxElement {
@@ -175,13 +175,13 @@ def:pub ParticleField(className: str = "") -> JsxElement {
         ctx: any = canvas.getContext("2d") if canvas else None;
         mq: any = window.matchMedia("(prefers-reduced-motion: reduce)");  # jac:ignore[E1030]
         reduce = mq.matches as bool;
-        on_move = lambda(e: any) {
+        on_move = lambda (e: any) {
             vw = window.innerWidth as float;  # jac:ignore[E1030]
             vh = window.innerHeight as float;  # jac:ignore[E1030]
             _st.tx = ((e.clientX as float) / vw) * 2 - 1;
             _st.ty = ((e.clientY as float) / vh) * 2 - 1;
         };
-        on_resize = lambda(e: any) { if canvas { _resize(canvas, ctx); } };
+        on_resize = lambda (e: any) { if canvas { _resize(canvas, ctx); } };
         if canvas {
             _resize(canvas, ctx);
             window.addEventListener("resize", on_resize);
@@ -190,7 +190,7 @@ def:pub ParticleField(className: str = "") -> JsxElement {
             } else {
                 window.addEventListener("pointermove", on_move);
                 _st.run = True;
-                requestAnimationFrame(lambda(t: float) { _tick(ctx, t); });
+                requestAnimationFrame(lambda (t: float) { _tick(ctx, t); });
             }
         }
         return lambda {
