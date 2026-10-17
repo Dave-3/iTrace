@@ -6,7 +6,7 @@ MarketIntel   - brand: regional counterfeit pressure -> proposed actions (human 
 Every agent has a deterministic fallback, so iTrace works with no API key.
 """
 
-import from byllm.lib { Model }
+import from jaclang.byllm.lib { Model }
 import from datetime { datetime }
 import hashlib;
 import hmac;

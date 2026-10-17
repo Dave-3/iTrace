@@ -83,9 +83,6 @@ og_description = "Agentic product trust for Kenya."
 og_site_name = "iTrace"
 
 
-[scale]
-[scale.microservices]
-enabled = false
 
 [jacpack]
 name = 'project-idea-generator'
