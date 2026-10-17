@@ -16,7 +16,7 @@ def:pub NavBar(path: str) -> JsxElement {
         ai_on: bool = load_ai().key != "";
 
     useEffect(lambda {
-        handler = lambda(e: any) { ai_on = load_ai().key != ""; };
+        handler = lambda (e: any) { ai_on = load_ai().key != ""; };
         window.addEventListener("itrace-ai-change", handler);
         return lambda { window.removeEventListener("itrace-ai-change", handler); };
     }, []);
@@ -49,7 +49,7 @@ def:pub AppShell() -> JsxElement {
     has route: str = current_route();
 
     useEffect(lambda {
-        handler = lambda(e: any) { route = current_route(); window.scrollTo(0, 0); };
+        handler = lambda (e: any) { route = current_route(); window.scrollTo(0, 0); };
         window.addEventListener("hashchange", handler);
         return lambda { window.removeEventListener("hashchange", handler); };
     }, []);

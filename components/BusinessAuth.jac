@@ -99,16 +99,16 @@ def:pub BusinessAuth(onAuthed: Callable[[Session], None]) -> JsxElement {
                 <form onSubmit={on_submit} className="mt-6 flex flex-col gap-4">
                     <div>
                         <label htmlFor="biz-email" className="text-sm font-semibold">Work email</label>
-                        <input id="biz-email" type="email" autoComplete="email" value={email_input} onChange={lambda e: ChangeEvent { email_input = e.target.value; }} placeholder="you@yourbrand.co.ke" className={field} />
+                        <input id="biz-email" type="email" autoComplete="email" value={email_input} onChange={lambda (e: ChangeEvent) { email_input = e.target.value; }} placeholder="you@yourbrand.co.ke" className={field} />
                     </div>
                     <div>
                         <label htmlFor="biz-password" className="text-sm font-semibold">Password</label>
-                        <input id="biz-password" type="password" autoComplete={"current-password" if mode == "signin" else "new-password"} value={password_input} onChange={lambda e: ChangeEvent { password_input = e.target.value; }} placeholder="At least 8 characters" className={field} />
+                        <input id="biz-password" type="password" autoComplete={"current-password" if mode == "signin" else "new-password"} value={password_input} onChange={lambda (e: ChangeEvent) { password_input = e.target.value; }} placeholder="At least 8 characters" className={field} />
                     </div>
                     {if mode == "signup" {
                         <div>
                             <label htmlFor="biz-brand" className="text-sm font-semibold">Brand you manage</label>
-                            <input id="biz-brand" list="brand-list" value={brand_input} onChange={lambda e: ChangeEvent { brand_input = e.target.value; }} placeholder="Pick a brand or type a new one" className={field} />
+                            <input id="biz-brand" list="brand-list" value={brand_input} onChange={lambda (e: ChangeEvent) { brand_input = e.target.value; }} placeholder="Pick a brand or type a new one" className={field} />
                             <datalist id="brand-list">
                                 {for b in brands { <option key={b} value={b}></option> }}
                             </datalist>

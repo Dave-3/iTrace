@@ -153,7 +153,7 @@ def get_hub() -> Hub {
     if len(hubs) > 0 {
         return hubs[0];
     }
-    hub = (root.shared ++> Hub())[0];
+    hub = (root.shared ++> Hub());
     seed_graph(hub);
     share_tree(hub);
     return hub;
@@ -184,14 +184,14 @@ def trace_for(hub: Hub, code: str) -> Trace {
             return t;
         }
     }
-    tr = (hub ++> Trace(code=code))[0];
+    tr = (hub ++> Trace(code=code));
     share(tr);
     return tr;
 }
 
 def record_scan(hub: Hub, code: str, region_name: str, verdict: str, minutes_ago: int = 0) -> Scan {
     tr = trace_for(hub, code);
-    sc = (tr ++> Scan(at=ago_iso(minutes_ago), region=find_region(hub, region_name).name, verdict=verdict))[0];
+    sc = (tr ++> Scan(at=ago_iso(minutes_ago), region=find_region(hub, region_name).name, verdict=verdict));
     sc +>:ScannedIn:+> find_region(hub, region_name);
     share(sc);
     return sc;
@@ -240,10 +240,10 @@ def seed_graph(hub: Hub) {
     rng = random.Random(254);
     regions: list[Region] = [];
     for r in REGIONS {
-        regions.append((hub ++> Region(name=r.name, county=r.county, lat=r.lat, lng=r.lng))[0]);
+        regions.append((hub ++> Region(name=r.name, county=r.county, lat=r.lat, lng=r.lng)));
     }
     for b in CATALOG {
-        brand = (hub ++> Brand(name=b.brand, sector=b.sector, hq=b.hq))[0];
+        brand = (hub ++> Brand(name=b.brand, sector=b.sector, hq=b.hq));
         hot = b.hot;
         pi = 0;
         for p in b.products {
@@ -251,7 +251,7 @@ def seed_graph(hub: Hub) {
                 sku=p.sku, name=p.name, category=p.category, mark=p.mark,
                 permit=p.permit, price_kes=p.price, kcal_per_100=p.kcal,
                 sugar_g=p.sugar, salt_g=p.salt
-            ))[0];
+            ));
             for bi in range(2) {
                 batch = (prod ++> Batch(
                     batch_no=f"{p.sku[:2]}-{2600 + pi * 10 + bi}",
@@ -260,10 +260,10 @@ def seed_graph(hub: Hub) {
                     expires_on=(datetime.now() + timedelta(days=300 - bi * 120)).date().isoformat(),
                     size=500,
                     recalled=(p.category == "pharma" and bi == 1)
-                ))[0];
+                ));
                 for ui in range(12) {
                     code = "ITR-" + p.sku.split("-")[1] + f"-{pi}{bi}{ui:02d}";
-                    unit = (batch ++> Unit(code=code))[0];
+                    unit = (batch ++> Unit(code=code));
                     # genuine scan history spread across the country
                     for _ in range(rng.randint(0, 2)) {
                         reg = regions[rng.randint(0, len(regions) - 1)];

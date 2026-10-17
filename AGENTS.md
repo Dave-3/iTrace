@@ -10,15 +10,16 @@ The repo lives on Windows, but `jac` is **not** on the Windows PATH. Always run
 it inside the Ubuntu WSL distro (the default distro, `docker-desktop`, has no bash):
 
 ```bash
-wsl -d MobileFlow_iOS_Test -e bash -lc 'cd /mnt/c/Users/user/Desktop/Ken/iTrace && ~/.venvs/jac/bin/jac <command>'
+wsl -d MobileFlow_iOS_Test -e bash -lc 'cd /mnt/c/Users/user/Desktop/Ken/iTrace && ~/.local/jac-0.34.23/jac <command>'
 ```
 
-The venv was created with `uv` (`~/.local/bin/uv`) and holds the `jaseci` package.
+This project targets **Jac 0.34.23** (the JacHammer runtime): the native `jac` binary from GitHub releases
+(jaseci-labs/jaseci). Do NOT install `jaclang` from PyPI - it is stale (0.16.x) and uses different syntax.
 
 ## Project rules (iTrace)
 
 - Keep the repo **at least 80% Jac** by line count. Write UI in Jac JSX (`.jac` components),
-  not `.js`/`.tsx`. Keep CSS small; port any canvas or interactive JS into Jac.
+  not `.js`/`.tsx`; client code is plain `.jac` (inferred from JSX). Keep CSS small; port any canvas or interactive JS into Jac.
 - Every LLM feature must still work without an API key, falling back to deterministic rules,
   so the demo never breaks.
 

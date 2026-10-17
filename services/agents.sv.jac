@@ -455,7 +455,6 @@ def _normalize(inv: Investigation, fallback: Investigation) -> Investigation {
 }
 
 def:pub verify_product(code: str, region: str, note: str, api_key: str, model: str) -> VerifyResult {
-    global _steps;
     _steps = [];
     clean = code.strip().upper();
     hub = get_hub();
@@ -503,7 +502,7 @@ def:pub report_product(code: str, region: str, note: str) -> str {
         return "Please describe what you noticed (at least 5 characters).";
     }
     hub = get_hub();
-    rep = (trace_for(hub, clean) ++> Report(note=note.strip()[:1000], region=region, at=now_iso()))[0];
+    rep = (trace_for(hub, clean) ++> Report(note=note.strip()[:1000], region=region, at=now_iso()));
     share(rep);
     return "Report saved. It now warns every shopper who checks this code, and alerts the brand.";
 }
@@ -527,7 +526,7 @@ sem propose_actions.regions = "Per-region stats: genuine scans, suspicious (clon
 sem propose_actions.total_loss_kes = "Total estimated monthly loss in KES across Kenya.";
 
 def rule_actions(regions: list[RegionStat]) -> list[ProposedAction] {
-    ranked = sorted(regions, key=lambda r: RegionStat : r.share_lost_pct, reverse=True);
+    ranked = sorted(regions, key=lambda (r: RegionStat) { r.share_lost_pct; }, reverse=True);
     acts: list[ProposedAction] = [];
     if len(ranked) > 0 and ranked[0].share_lost_pct > 0 {
         r = ranked[0];
@@ -541,7 +540,7 @@ def rule_actions(regions: list[RegionStat]) -> list[ProposedAction] {
             detail=f"SMS registered stockists in {r.region}: {r.suspicious + r.fake} flagged scans this month. Ask them to buy only from authorised distributors.",
             region=r.region, impact_kes=int(r.est_loss_kes / 2)));
     }
-    by_genuine = sorted([r for r in regions if r.genuine > 0], key=lambda r: RegionStat : r.genuine, reverse=True);
+    by_genuine = sorted([r for r in regions if r.genuine > 0], key=lambda (r: RegionStat) { r.genuine; }, reverse=True);
     if len(by_genuine) > 0 {
         r = by_genuine[0];
         acts.append(ProposedAction(kind="promotion", title=f"10% off genuine stock in {r.region} for 2 weeks",
@@ -565,13 +564,13 @@ obj RegionScan {
 def _region_stats(hub: Hub, brand: Brand) -> RegionScan {
     sw = SupplyWalker(codes=[], _prices=[]);
     brand spawn sw;
-    own = set(sw.codes);
+    own_codes = set(sw.codes);
     stats: dict[str, RegionStat] = {};
     for r in [hub -->][?:Region] {
         stats[r.name] = RegionStat(region=r.name, lat=r.lat, lng=r.lng);
     }
     for t in [hub -->][?:Trace] {
-        mine = t.code in own;
+        mine = t.code in own_codes;
         claimed = t.claimed_brand == brand.name;
         if not mine and not claimed {
             continue;
@@ -602,11 +601,10 @@ def _region_stats(hub: Hub, brand: Brand) -> RegionScan {
         # each flagged scan ~ 40 packs sold through the same channel (pilot assumption)
         st.est_loss_kes = bad * 40 * max(sw.avg_price, 50);
     }
-    return RegionScan(regions=list(stats.values()), avg_price=sw.avg_price, n_codes=len(own));
+    return RegionScan(regions=list(stats.values()), avg_price=sw.avg_price, n_codes=len(own_codes));
 }
 
 def:pub market_intel(token: str, api_key: str, model: str, refresh: bool) -> IntelResult {
-    global _steps;
     _steps = [];
     hub = get_hub();
     acct = _account_by_token(token);
@@ -624,7 +622,7 @@ def:pub market_intel(token: str, api_key: str, model: str, refresh: bool) -> Int
     flagged = sum([r.suspicious + r.fake for r in regions]);
     loss = sum([r.est_loss_kes for r in regions]);
     share_pct = int(round(100 * flagged / (genuine + flagged))) if genuine + flagged > 0 else 0;
-    hot = sorted(regions, key=lambda r: RegionStat : r.share_lost_pct, reverse=True);
+    hot = sorted(regions, key=lambda (r: RegionStat) { r.share_lost_pct; }, reverse=True);
     _log("MarketIntelAgent", "scan crowd network", f"{genuine} genuine vs {flagged} flagged scans; hotspots: {', '.join([h.region for h in hot[:3]])}");
     summary = f"{share_pct}% of {brand.name} scans nationally fail verification. Hotspots: " + ", ".join([f"{h.region} ({h.share_lost_pct}%)" for h in hot[:3]]) + f". Estimated KES {loss:,} a month leaks to counterfeits.";
 
@@ -655,7 +653,7 @@ def:pub market_intel(token: str, api_key: str, model: str, refresh: bool) -> Int
         }
         for p in props {
             act = (brand ++> Action(kind=p.kind, title=p.title, detail=p.detail, region=p.region,
-                impact_kes=p.impact_kes, created_at=now_iso(), by_ai=ai_used))[0];
+                impact_kes=p.impact_kes, created_at=now_iso(), by_ai=ai_used));
             share(act);
         }
         _log("MarketIntelAgent", "propose actions", f"{len(props)} actions awaiting human approval");
@@ -697,16 +695,16 @@ walker:pub register_batch {
         hub = get_hub();
         b = find_brand(hub, self.brand);
         if b is None {
-            b = (hub ++> Brand(name=self.brand, sector=self.category))[0];
+            b = (hub ++> Brand(name=self.brand, sector=self.category));
             share(b);
         }
         prods = [p for p in [b -->][?:Product] if p.name == self.product];
-        prod = prods[0] if len(prods) > 0 else (b ++> Product(sku=self.product.upper().replace(" ", "-")[:24], name=self.product, category=self.category))[0];
+        prod = prods[0] if len(prods) > 0 else (b ++> Product(sku=self.product.upper().replace(" ", "-")[:24], name=self.product, category=self.category));
         share(prod);
-        batch = (prod ++> Batch(batch_no=self.batch_no, expires_on=self.expires_on, size=len(self.codes)))[0];
+        batch = (prod ++> Batch(batch_no=self.batch_no, expires_on=self.expires_on, size=len(self.codes)));
         share(batch);
         for c in self.codes {
-            share((batch ++> Unit(code=c.strip().upper()))[0]);
+            share((batch ++> Unit(code=c.strip().upper())));
         }
         report {"ok": True, "brand": b.name, "product": prod.name, "batch": batch.batch_no, "units": len(self.codes)};
     }
@@ -764,7 +762,7 @@ def _account_by_token(token: str) -> Account | None {
         return None;
     }
     for a in [get_hub() -->][?:Account] {
-        if a.token != "" and hmac.compare_digest(a.token, token) {
+        if a.token != "" and hmac.compare_digest(a.token.encode(), token.encode()) {
             return a;
         }
     }
@@ -788,7 +786,7 @@ def:pub sign_up(email: str, password: str, brand_name: str) -> Session {
     }
     brand = brand_name.strip()[:60];
     if find_brand(hub, brand) is None {
-        share((hub ++> Brand(name=brand, sector="New on iTrace"))[0]);
+        share((hub ++> Brand(name=brand, sector="New on iTrace")));
     }
     salt = secrets.token_hex(16);
     tok = secrets.token_urlsafe(32);
@@ -798,7 +796,7 @@ def:pub sign_up(email: str, password: str, brand_name: str) -> Session {
 
 def:pub sign_in(email: str, password: str) -> Session {
     a = _account_by_email(get_hub(), email.strip().lower());
-    if a is None or not hmac.compare_digest(a.pw_hash, _hash(password, a.salt)) {
+    if a is None or not hmac.compare_digest(a.pw_hash.encode(), _hash(password, a.salt).encode()) {
         return Session(error="Email or password is incorrect.");
     }
     a.token = secrets.token_urlsafe(32);

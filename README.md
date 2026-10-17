@@ -42,7 +42,7 @@ Every agent has a **deterministic fallback**, so iTrace works with no API key. W
 | **Bring your own model**: one `Model` glob, with the key and model set per request | the Settings panel; works with any LiteLLM id (Gemini free tier by default) |
 | **Native graph persistence** on `root.shared` (a public commons graph); no external database | `get_hub()` |
 | **Auto-generated REST API**: `def:pub` functions and `walker:pub` walkers become endpoints | `POST /walker/register_batch`, `POST /walker/ingest_scan`, `/function/verify_product`… |
-| **Full-stack Jac client**: React UI written in Jac (`.cl.jac`), `sv import` RPC with typed objects crossing the wire | `components/*.cl.jac`, including the particle-stream hero ported to Jac canvas code |
+| **Full-stack Jac client**: React UI written in Jac (client inferred from JSX), `sv import` RPC with typed objects crossing the wire | `components/*.jac`, including the particle-stream hero ported to Jac canvas code |
 
 About **94% of the code is Jac**. The only other file is a small Tailwind stylesheet.
 
@@ -61,7 +61,7 @@ curl -X POST http://localhost:8044/walker/ingest_scan -H 'Content-Type: applicat
 ## Run it
 
 ```bash
-pip install jaseci            # Jac 0.16.x + byllm + jac-client + jac-scale
+# Jac 0.34.23 native binary: https://github.com/jaseci-labs/jaseci/releases/tag/v0.34.23
 jac install                   # npm dependencies for the client
 jac start main.jac --port 8044   # http://localhost:8044
 ```
