@@ -1,5 +1,7 @@
-import from .frontend { app as ClientApp }
+import from services.scanwise { lookup_code, submit_report }
+import from .components.ScanWise { ScanWise }
+import ".styles.global.css";
 
 def:pub app() -> JsxElement {
-    return <ClientApp />;
+    return <ScanWise />;
 }

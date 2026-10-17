@@ -1,38 +1,29 @@
-# Empty
+# ScanWise
 
-A blank canvas — the minimal jac-shadcn starter the other templates are built on.
+ScanWise is a consumer-facing product-code verification demo. It compares a manually entered code with a small fictional catalog, shows the evidence behind a deterministic result, and saves user-submitted reports to the Jac graph store.
 
-One client page, the violet theme wired up, and nothing else in the way. Start
-here when none of the other templates fit, and describe what you want to build.
+## Run
 
-## What you get
-
-- `main.jac` — a `cl { }` block with a single `def:pub app()` page (a centered
-  card). This is the whole app.
-- `components/ui/` — the two jac-shadcn primitives (`Button`, `Card`) the page
-  uses. Add more with `jac add --shadcn <name>`.
-- `styles/global.css` — semantic design tokens and the theme, already wired up.
-- `lib/utils.jac` — `cn()` for merging class names.
-
-## Run it
+The JacHammer preview runs this project automatically. In a local Jac 0.34.23 environment:
 
 ```bash
 jac install
-jac start --dev
+jac start --dev main.jac
 ```
 
-Open <http://localhost:8000>.
+No API key, external integration, or QR-scanning package is required. The demo intentionally uses manual code entry.
 
-## Where to go next
+## Walkthrough
 
-- **Add a page / routing** — create a `pages/` directory; files become routes
-  by convention. See `jac guide jac-cl-routing`.
-- **Add a backend** — create `services/foo.sv.jac` with `def:pub` functions;
-  each becomes a `POST /function/<name>` REST endpoint automatically, and data
-  hung off `root` persists with no database to set up (Jac stores the graph for
-  you — SQLite in `.jac/data/` by default, MongoDB via `MONGODB_URI`). See
-  `jac guide jac-sv-endpoints` and `jac guide jac-sv-persistence`.
-- **Add auth** — see `jac guide jac-sv-auth` and `jac guide jac-cl-auth`.
+Enter one of the fictional sample codes:
 
-`AGENTS.md` lists the reference guides bundled with the compiler; read them
-before writing Jac — the syntax is easy to confuse with Python or JSX.
+- `SW-2841-A` — registered demo product, linked batch, no seeded scan-history alert.
+- `SW-7730-B` — registered demo product with a missing batch-origin check.
+- `SW-9902-X` — registered demo product whose synthetic scan history contains distant regions 18 minutes apart.
+- Any other value — unknown/unrecognized; not a counterfeit determination.
+
+The suspicious sample conditionally displays its scan-history investigation step. Statuses come from explicit demo rules; there is no LLM inference in this MVP. Submit a report with at least five characters to store a `ProductReport` node reachable from the shared graph root. The queue is demo-only and has no administration interface.
+
+## Trust model and limitations
+
+All products, brands, batches, and scan events shown are fictional. A QR code can be copied, and a record match does not establish the authenticity, safety, or provenance of the physical item. Suspicious activity is a signal for investigation, not proof of wrongdoing. The app does not scan QR images, contact manufacturers, certify products, or expose private supply-chain data. Reports are persisted in the local Jac graph store; this demo has no authentication, abuse controls, or private report access policy and must not be used for real-world reports.

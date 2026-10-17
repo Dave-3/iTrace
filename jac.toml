@@ -13,15 +13,15 @@ api_key = "${OPENAI_API_KEY:-}"
 
 [jac-shadcn]
 style = "nova"
-baseColor = "neutral"
-theme = "amber"
-font = "inter"
-radius = "default"
-menuAccent = "subtle"
+baseColor = "zinc"
+theme = "teal"
+font = "geist"
+radius = "medium"
+menuAccent = "bold"
 menuColor = "default"
-
 [dependencies]
 [dependencies.npm]
+"@fontsource-variable/geist" = "*"
 react = "^18.2.0"
 react-dom = "^18.2.0"
 react-router-dom = "^6.22.0"
